@@ -1,0 +1,61 @@
+This is the SVM Apache module.
+
+An example configuation for httpd.conf:
+
+LoadModule svmloc_module /usr/lib/apache2/mod_svmloc.so
+
+SVMHandler cytoplasmicn
+SVMHandler periplasmicn
+SVMHandler extracellularn
+SVMHandler innermembranen
+SVMHandler outermembranen
+
+SVMModel cytoplasmicn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Cytoplasmic/SVM_MODEL.txt
+SVMFreqPattern cytoplasmicn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Cytoplasmic/fre_patt\
+erns.txt
+
+SVMModel periplasmicn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Periplasmic/SVM_MODEL.txt
+SVMFreqPattern periplasmicn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Periplasmic/fre_patt\
+erns.txt
+
+SVMModel extracellularn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Extracellular/SVM_MODEL.\
+txt
+SVMFreqPattern extracellularn /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Extracellular/fre_\
+patterns.txt
+
+SVMModel innermembranen /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Innermembrane/SVM_MODEL.\
+txt
+SVMFreqPattern innermembranen /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Innermembrane/fre_\
+patterns.txt
+
+SVMModel outermembranen /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Outermembrane/SVM_MODEL.\
+txt
+SVMFreqPattern outermembranen /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/gramneg/Outermembrane/fre_\
+patterns.txt
+
+SVMHandler cytoplasmicp
+SVMHandler extracellularp
+SVMHandler cytoplasmicmembranep
+SVMHandler cellwallp
+
+SVMModel cytoplasmicp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Cytoplasmic/SVM_MODEL.txt
+SVMFreqPattern cytoplasmicp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Cytoplasmic/fre_patt\
+erns.txt
+
+SVMModel extracellularp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Extracellular/SVM_MODEL.\
+txt
+SVMFreqPattern extracellularp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Extracellular/fre_\
+patterns.txt
+
+SVMModel cytoplasmicmembranep /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Membrane/SVM_MODEL\
+.txt
+SVMFreqPattern cytoplasmicmembranep /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Membrane/fre\
+_patterns.txt
+
+SVMModel cellwallp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Cellwall/SVM_MODEL.txt
+SVMFreqPattern cellwallp /home.westgrid/lairdm/working/psort/bio-tools-psort-all/psort/conf/analysis/subloc/grampos/Cellwall/fre_patterns.t\
+xt
+
+<Location /svmloc>
+        SetHandler svmloc
+</Location>
