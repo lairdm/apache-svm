@@ -19,7 +19,7 @@ extern "C" {
   extern void destroySVM(SVM*);
   extern int loadSVMModel(SVM*, char*);
   extern int loadSVMFreqPattern(SVM*, char*);
-  extern int SVMClassify(SVM*, char*);
+  extern double SVMClassify(SVM*, char*);
 
 #ifdef __cplusplus
 }

@@ -123,6 +123,7 @@ static int SVMLoc_handler(request_rec* r) {
     char *val;
     const char *delim = "&";
     char *last;
+    unsigned int SVM_count;
 
     val = apr_hash_get(formdata, "Module", APR_HASH_KEY_STRING);
     if(val == NULL) {
@@ -138,7 +139,18 @@ static int SVMLoc_handler(request_rec* r) {
 
       tSVM_Obj = mod_SVMLoc_fetch_SVM(r->server, NULL, key, 0);
       if(tSVM_Obj != NULL) {
+#ifdef DEBUG
+	ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+                      "Stashing SVM of type %s", key);
+	if(tSVM_Obj->pSVM == NULL) {
+	  ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+			"Error, pSVM component is NULL!");
+	}
+#endif
 	apr_hash_set(SVMs, key, APR_HASH_KEY_STRING, tSVM_Obj->pSVM);
+      } else {
+	ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+		      "Error, can not find SVM of type %s", key);
       }
     }
 
@@ -149,16 +161,38 @@ static int SVMLoc_handler(request_rec* r) {
       return OK;
     }
 
+#ifdef DEBUG
+    ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+		  "Sequences to be tested: %s", seq);
+
+    SVM_count = apr_hash_count(SVMs);
+    ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+                  "SVMs to be run: %d", SVM_count);
+#endif
+
     for(index = apr_hash_first(r->pool, SVMs); index != NULL;
 	index = apr_hash_next(index)) {
 
-      apr_hash_this(index, (void**)&key, &klen, (void**)&pSVM);
+      apr_hash_this(index, (const void**)&key, &klen, (void**)&pSVM);
+
+#ifdef DEBUG
+      ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+		    "About to run SVM: %s", key);
+#endif
 
       if(pSVM != NULL) {
 	results = SVMClassify(pSVM, seq);
 	ap_rprintf(r, "%s: %d\n", key, results);
+#ifdef DEBUG
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+                      "SVM successful: %s: %d", key, results);
+#endif
       } else {
 	ap_rprintf(r, "%s: ERROR", key);
+#ifdef DEBUG
+	ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r,
+		      "Error running SVM: %s", key);
+#endif	
       }
     }
    
@@ -178,23 +212,44 @@ static int mod_SVMLoc_hook_post_config(apr_pool_t *pconf, apr_pool_t *plog,
   mod_SVMLoc_svr_cfg* svr
     = ap_get_module_config(s->module_config, &svmloc_module);
 
+#ifdef DEBUG
+  ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+	       "Beginning to initialize SVMs");
+#endif
+ 
   SVM_Obj = svr->SVMList;
   prev_SVM_Obj = &(svr->SVMList);
 
   while(SVM_Obj->nextSVM != NULL) {
     SVM_Obj->pSVM = createSVM(0, 2, 3, 0, 0, 1, 0.5, 0.1);
     if(SVM_Obj->pSVM == NULL) {
+      ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+		   "Error creating SVM, removing SVM");
       mod_SVMLoc_remove_SVM(prev_SVM_Obj, SVM_Obj);
       }
 
     if(! loadSVMModel(SVM_Obj->pSVM, SVM_Obj->model_filename)) {
+      ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+                   "Error loading model %s, removing SVM", SVM_Obj->model_filename);
       mod_SVMLoc_remove_SVM(prev_SVM_Obj, SVM_Obj);
       return 1;
     }
 
     if(! loadSVMFreqPattern(SVM_Obj->pSVM, SVM_Obj->freqpattern_filename)) {
+      ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+                   "Error loading freq patterns %s, removing SVM", SVM_Obj->freqpattern_filename);
       mod_SVMLoc_remove_SVM(prev_SVM_Obj, SVM_Obj);
     }
+
+    if(SVM_Obj->pSVM == NULL) {
+      ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+                   "Error pSVM component is NULL!");
+    }
+
+#ifdef DEBUG
+    ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+		 "Finished initializing SVM %s", SVM_Obj->SVM_handler);
+#endif
 
     prev_SVM_Obj = (SVM_Obj_holder**)&SVM_Obj->nextSVM;
     SVM_Obj = (SVM_Obj_holder*)SVM_Obj->nextSVM;
@@ -268,6 +323,11 @@ static const char* modSVMLoc_set_model_filename(cmd_parms* cmd, void* cfg, const
 
   SVM_Obj->model_filename = apr_pstrdup(cmd->pool, modelFilename);
 
+  if(SVM_Obj->model_filename == NULL) {
+    ap_log_error(APLOG_MARK, APLOG_EMERG, 0, cmd->server,
+		 "Error, unable to allocate string for modelFilename!");
+  }
+
   return NULL;
 }
 
@@ -281,6 +341,11 @@ static const char* modSVMLoc_set_freqpattern_filename(cmd_parms* cmd, void* cfg,
   }
 
   SVM_Obj->freqpattern_filename = apr_pstrdup(cmd->pool, freqpatternFilename);
+
+  if(SVM_Obj->freqpattern_filename == NULL) {
+    ap_log_error(APLOG_MARK, APLOG_EMERG, 0, cmd->server,
+		 "Error, unable to allocate string for frequent pattern filename!");
+  }
 
   return NULL;
 }
